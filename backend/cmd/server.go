@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	// "github.com/egeuysall/cove/internal/api"
-	// supabase "github.com/egeuysall/cove/internal/supabase"
-	// generated "github.com/egeuysall/cove/internal/supabase/generated"
+	"github.com/egeuysall/summit/internal/api"
+	supabase "github.com/egeuysall/summit/internal/supabase"
+	generated "github.com/egeuysall/summit/internal/supabase/generated"
 	"github.com/joho/godotenv"
 )
 
