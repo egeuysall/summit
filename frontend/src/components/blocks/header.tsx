@@ -114,7 +114,7 @@ export const Header: React.FC = () => {
 						<Link
 							href="/"
 							onClick={closeMobileMenu}
-							className="flex gap-2xs items-center no-underline"
+							className="flex gap-sm items-center no-underline"
 						>
 							<Image
 								width={iconSize}
