@@ -19,12 +19,11 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { features } from '@/lib/features';
-import { pricing } from '@/lib/pricing';
 import { howWorks } from '@/lib/howWorks';
 import { blogs } from '@/lib/blogs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 /**
  * Landing
@@ -43,7 +42,7 @@ const Landing: React.FC = () => {
 				</p>
 
 				{/* Call-to-Action Button */}
-				<Link href="">
+				<Link href="/auth">
 					<Button className="mb-lg">Get started for free</Button>
 				</Link>
 
