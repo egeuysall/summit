@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { apiClient } from '@/lib/api/client';
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const initializedRef = useRef(false);
 	const supabase = createClient();
 
-	const fetchProfile = async (currentUser: User, token?: string, setLoadingState = false) => {
+	const fetchProfile = useCallback(async (token?: string, setLoadingState = false) => {
 		if (setLoadingState) {
 			setLoading(true);
 		}
@@ -71,11 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				setLoading(false);
 			}
 		}
-	};
+	}, [accessToken, supabase.auth]);
 
 	const refreshProfile = async () => {
 		if (user) {
-			await fetchProfile(user);
+await fetchProfile();
 		}
 	};
 
@@ -132,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					setAccessToken(session.access_token);
 				}
 				if (session?.user && session?.access_token) {
-					await fetchProfile(session.user, session.access_token);
+					await fetchProfile(session.access_token);
 				}
 				initializedRef.current = true;
 			} catch (error) {
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					setAccessToken(session.access_token);
 				}
 				if (session?.user && session?.access_token) {
-					await fetchProfile(session.user, session.access_token);
+					await fetchProfile(session.access_token);
 				}
 				setLoading(false);
 			} else if (event === 'TOKEN_REFRESHED' && session?.user) {
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				if (session?.access_token) {
 					setAccessToken(session.access_token);
 				}
-				await fetchProfile(session.user, session.access_token);
+				await fetchProfile(session.access_token);
 			}
 		});
 
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			clearTimeout(safetyTimeout);
 			subscription.unsubscribe();
 		};
-	}, []);
+	}, [fetchProfile, supabase.auth]);
 
 	const signIn = async (email: string, password: string) => {
 		const { error } = await supabase.auth.signInWithPassword({

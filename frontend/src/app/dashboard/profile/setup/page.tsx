@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { useApi } from '@/hooks/use-api';
 import { apiClient } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
@@ -32,8 +30,6 @@ export default function ProfileSetupPage() {
 	const [avatarUrl, setAvatarUrl] = useState('');
 	const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 	const { execute, loading } = useApi();
-	const { refreshProfile } = useAuth();
-	const router = useRouter();
 
 	const toggleSkill = (skill: string) => {
 		setSelectedSkills((prev) =>

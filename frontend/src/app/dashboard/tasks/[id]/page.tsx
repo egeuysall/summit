@@ -37,20 +37,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 	const router = useRouter();
 
 	useEffect(() => {
-		fetchTask();
-	}, [id]);
+		const fetchTask = async () => {
+			try {
+				const response = (await apiClient.getTask(id)) as unknown as { data: Task };
+				setTask(response.data);
+			} catch {
+				toast.error('Failed to load task');
+				router.push('/dashboard/tasks');
+			} finally {
+				setLoading(false);
+			}
+		};
 
-	const fetchTask = async () => {
-		try {
-			let data = await apiClient.getTask(id);
-			setTask(data.data);
-		} catch (error) {
-			toast.error('Failed to load task');
-			router.push('/dashboard/tasks');
-		} finally {
-			setLoading(false);
-		}
-	};
+		fetchTask();
+	}, [id, router]);
 
 	const handleClaimTask = async () => {
 		const result = await execute((token) => apiClient.claimTask(token, id));

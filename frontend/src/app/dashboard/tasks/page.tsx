@@ -31,7 +31,6 @@ export default function TasksPage() {
 		if (!authLoading) {
 			fetchTasks();
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [authLoading]);
 
 	useEffect(() => {
@@ -41,14 +40,13 @@ export default function TasksPage() {
 
 	const fetchTasks = async () => {
 		try {
-			const result = await apiClient.listTasks();
+			const result = (await apiClient.listTasks()) as unknown as { data?: Task[] } | Task[];
+
 			let tasksData: Task[] = [];
-			if (result) {
-				if (Array.isArray(result)) {
-					tasksData = result;
-				} else if (result.data && Array.isArray(result.data)) {
-					tasksData = result.data;
-				}
+			if (Array.isArray(result)) {
+				tasksData = result;
+			} else if (result.data && Array.isArray(result.data)) {
+				tasksData = result.data;
 			}
 
 			setTasks(tasksData);

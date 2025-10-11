@@ -24,14 +24,16 @@ export default function TransactionsPage() {
 	}, [authContextLoading, authLoading]);
 
 	const fetchTransactions = async () => {
-		const result = await executeWhenReady((token) => apiClient.getTransactions(token, 50));
+		const result = (await executeWhenReady((token) =>
+			apiClient.getTransactions(token, 50)
+		)) as unknown as { data?: Transaction[] } | Transaction[];
+
 		let transactionsData: Transaction[] = [];
-		if (result) {
-			if (Array.isArray(result)) {
-				transactionsData = result;
-			} else if (result.data && Array.isArray(result.data)) {
-				transactionsData = result.data;
-			}
+
+		if (Array.isArray(result)) {
+			transactionsData = result;
+		} else if (result && Array.isArray(result.data)) {
+			transactionsData = result.data;
 		}
 
 		setTransactions(transactionsData);

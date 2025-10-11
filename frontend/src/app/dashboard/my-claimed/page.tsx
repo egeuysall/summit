@@ -20,8 +20,8 @@ export default function MyClaimedTasksPage() {
 		if (result) {
 			if (Array.isArray(result)) {
 				tasksData = result;
-			} else if (result.data && Array.isArray(result.data)) {
-				tasksData = result.data;
+			} else if (typeof result === 'object' && result !== null && 'data' in result && Array.isArray((result as { data: unknown }).data)) {
+				tasksData = (result as { data: Task[] }).data;
 			}
 		}
 
@@ -57,7 +57,7 @@ export default function MyClaimedTasksPage() {
 
 			{tasks.length === 0 ? (
 				<div className="text-center py-12">
-					<p className="text-large text-neutral-500">You haven't claimed any tasks yet.</p>
+					<p className="text-large text-neutral-500">You haven&apos;t claimed any tasks yet.</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

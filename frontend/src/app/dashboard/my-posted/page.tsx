@@ -21,13 +21,18 @@ export default function MyPostedTasksPage() {
 	}, [isReady]);
 
 	const fetchTasks = async () => {
-		const result = await executeWhenReady((token) => apiClient.getMyPostedTasks(token));
+		const result: Task[] | { data: Task[] } | null = await executeWhenReady((token) =>
+			apiClient.getMyPostedTasks(token)
+		);
 		let tasksData: Task[] = [];
 		if (result) {
 			if (Array.isArray(result)) {
 				tasksData = result;
-			} else if (result.data && Array.isArray(result.data)) {
-				tasksData = result.data;
+			} else if (typeof result === 'object' && result !== null && 'data' in result) {
+				const resultWithData = result as { data: Task[] };
+				if (Array.isArray(resultWithData.data)) {
+					tasksData = resultWithData.data;
+				}
 			}
 		}
 
@@ -55,7 +60,7 @@ export default function MyPostedTasksPage() {
 
 			{tasks.length === 0 ? (
 				<div className="text-center py-12">
-					<p className="text-large text-neutral-500">You haven't posted any tasks yet.</p>
+					<p className="text-large text-neutral-500">You haven&apos;t posted any tasks yet.</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

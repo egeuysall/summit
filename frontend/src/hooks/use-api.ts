@@ -61,7 +61,7 @@ export function useApi() {
 				setLoading(false);
 			}
 		},
-		[getToken, authLoading, user]
+		[getToken, authLoading]
 	);
 
 	const executeWhenReady = useCallback(
