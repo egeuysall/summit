@@ -105,7 +105,7 @@ export default function TasksPage() {
 	return (
 		<div className="space-y-6">
 			<div className="flex-between">
-				<h1 className="text-h3 font-heading font-semibold">Available Tasks</h1>
+				<h3>Available Tasks</h3>
 				<Button onClick={() => router.push('/dashboard/tasks/create')} className="primary">
 					Post a task
 				</Button>

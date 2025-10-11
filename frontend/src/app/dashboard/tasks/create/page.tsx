@@ -77,9 +77,7 @@ export default function CreateTaskPage() {
 
 		if (result) {
 			toast.success('Task created successfully!');
-			// Redirect to tasks list instead of task detail to see the new task
 			router.push('/dashboard/tasks');
-			// Force a refresh to fetch the updated task list
 			router.refresh();
 		}
 	};
