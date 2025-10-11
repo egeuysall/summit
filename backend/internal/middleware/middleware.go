@@ -14,10 +14,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// contextKey is a custom type for context keys used in this package.
 type contextKey string
 
-// userIDKey is the context key for storing the authenticated user's ID.
 const userIDKey = contextKey("userID")
 
 func RequireAuth() func(http.Handler) http.Handler {
@@ -52,7 +50,6 @@ func RequireAuth() func(http.Handler) http.Handler {
 			}
 			tokenStr := parts[1]
 
-			// Parse and validate the token
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -77,66 +74,53 @@ func RequireAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Validate the issuer if specified
 			if iss, ok := claims["iss"].(string); !ok || (supabaseIssuer != "" && iss != supabaseIssuer) {
 				log.Printf("Invalid issuer: %v, expected: %v", iss, supabaseIssuer)
 				utils.SendError(w, "Unauthorized: invalid issuer", http.StatusUnauthorized)
 				return
 			}
 
-			// Validate the audience
 			if aud, ok := claims["aud"].(string); !ok || (supabaseAudience != "" && aud != supabaseAudience) {
 				log.Printf("Invalid audience: %v, expected: %v", aud, supabaseAudience)
 				utils.SendError(w, "Unauthorized: invalid audience", http.StatusUnauthorized)
 				return
 			}
 
-			// Check for token expiration
 			if exp, ok := claims["exp"].(float64); !ok || int64(exp) < time.Now().Unix() {
 				utils.SendError(w, "Unauthorized: token expired", http.StatusUnauthorized)
 				return
 			}
 
-			// Extract the user ID (subject)
 			sub, ok := claims["sub"].(string)
 			if !ok || sub == "" {
 				utils.SendError(w, "Unauthorized: missing subject", http.StatusUnauthorized)
 				return
 			}
 
-			// Add user ID to the context and continue the request
 			ctx := context.WithValue(r.Context(), userIDKey, sub)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// UserIDFromContext extracts the user ID from the context as set by RequireAuth.
-//
-// Returns the user ID string and true if present, or an empty string and false otherwise.
+// UserIDFromContext extracts the user ID from the request context.
 func UserIDFromContext(ctx context.Context) (string, bool) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	return userID, ok
 }
 
-// Cors returns a middleware that sets CORS headers for allowed origins, methods, and headers.
-//
-// Allowed origins: https://www.cove.egeuysal.com, http://localhost:3000
-// Allowed methods: GET, POST, PATCH, DELETE, OPTIONS
-// Allowed headers: Accept, Authorization, Content-Type, X-CSRF-Token
-// Credentials are allowed. MaxAge is 3600 seconds.
+// Cors returns a middleware that sets CORS headers.
 func Cors() func(next http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://www.cove.egeuysal.com", "http://localhost:3000"},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           3600,
 	})
 }
 
-// SetContentType returns a middleware that sets the Content-Type header to application/json
-// for all HTTP responses.
+// SetContentType sets Content-Type header to application/json for all responses.
 func SetContentType() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -16,25 +16,17 @@ func Init(q *generated.Queries) {
 	Queries = q
 }
 
-func SendJson(w http.ResponseWriter, message interface{}, statusCode int) {
+func SendJson(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
-
-	response := map[string]interface{}{"data": message}
-	err := json.NewEncoder(w).Encode(response)
-
-	if err != nil {
-		SendError(w, "Failed to encode JSON response", http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": data}); err != nil {
+		log.Printf("JSON encoding failed: %v", err)
 	}
 }
 
 func SendError(w http.ResponseWriter, message string, statusCode int) {
 	w.WriteHeader(statusCode)
-
-	errorResponse := map[string]string{"error": message}
-	err := json.NewEncoder(w).Encode(errorResponse)
-
-	if err != nil {
-		log.Printf("SendError encoding failed: %v", err)
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": message}); err != nil {
+		log.Printf("Error encoding failed: %v", err)
 	}
 }
 

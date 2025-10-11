@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	// "github.com/egeuysall/cove/internal/utils"
 	"log"
 	"net/http"
 	"os"
@@ -10,36 +9,27 @@ import (
 	"github.com/egeuysall/summit/internal/api"
 	supabase "github.com/egeuysall/summit/internal/supabase"
 	generated "github.com/egeuysall/summit/internal/supabase/generated"
+	"github.com/egeuysall/summit/internal/utils"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading environment")
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
 	dbConn := supabase.Connect()
 	defer dbConn.Close()
 
-	queries := generated.New(dbConn)
+	utils.Init(generated.New(dbConn))
 
-	utils.Init(queries)
-
-	router := api.Router()
-
-	portStr := os.Getenv("PORT")
-
-	if portStr == "" {
+	port := os.Getenv("PORT")
+	if port == "" {
 		log.Fatal("PORT not set in environment")
 	}
 
-	addr := fmt.Sprintf(":%s", portStr)
-
-	log.Printf("Server starting on http://localhost%s", addr)
-	err = http.ListenAndServe(addr, router)
-
-	if err != nil {
-		log.Fatal(err)
+	log.Printf("🚀 Summit API starting on http://localhost:%s", port)
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), api.Router()); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
 	}
 }
