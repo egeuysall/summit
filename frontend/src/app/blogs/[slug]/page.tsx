@@ -29,7 +29,7 @@ export default async function RecipePage({ params }: PageProps) {
 				<span>Go back</span>
 			</Link>
 
-			<section className="flex flex-col gap-12">
+			<section className="flex flex-col gap-md">
 				<div className="flex flex-col gap-2xs">
 					<h2>{blog.title}</h2>
 				</div>
