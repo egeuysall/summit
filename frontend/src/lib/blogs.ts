@@ -2,7 +2,7 @@ import type { Blog } from '@/types/other';
 
 export const blogs: Blog[] = [
 	{
-		slug: 'AstroExplorers have traveled to the north of the moon.',
+		slug: 'astroexplorers-have-traveled-to-the-north-of-the-moon',
 		title: 'AstroExplorers have traveled to the north of the moon.',
 		excerpt:
 			'Astrounautes say that "North of the current colony settlemrnt, they can expand more across the moon."',
@@ -13,7 +13,7 @@ Astronauts ventured north of the main colony settlement, their boots pressing in
 Working together, the team began setting up a new outpost, laying the foundation for another thriving lunar colony. Their efforts marked a bold step in expanding the human races presence on the moon.`,
 	},
 	{
-		slug: 'Getting Started with Solaris farming on the moon tech.',
+		slug: 'getting-started-with-solaris-farming-on-the-moon-tech',
 		title: 'Getting Started with Solaris farming on the moon tech.',
 		excerpt: 'Colonists on the moon have started using Solaris tech to farm food and grow plants.',
 		content: `# Solaris Farming Technology
@@ -23,7 +23,7 @@ The colonists on the moon quickly adapted to their new environment, determined t
 Harnessing abundant solar energy, they cultivated crops in nutrient-rich substrates, turning the barren lunar surface into a patchwork of thriving gardens. This breakthrough marked a new era of self-sufficiency for the moon's settlers.`,
 	},
 	{
-		slug: 'Scintests on the moon have developed new water harvesting techniques.',
+		slug: 'scintests-on-the-moon-have-developed-new-water-harvesting-techniques',
 		title: 'Scintests on the moon have developed new water harvesting techniques.',
 		excerpt:
 			'Colonists on the moon have started using new techniques to harvest water from the lunar surface.',
