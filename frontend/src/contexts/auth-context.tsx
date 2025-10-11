@@ -29,53 +29,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const initializedRef = useRef(false);
 	const supabase = createClient();
 
-	const fetchProfile = useCallback(async (token?: string, setLoadingState = false) => {
-		if (setLoadingState) {
-			setLoading(true);
-		}
-		try {
-			// Use provided token or get from cached state or fetch from session
-			let tokenToUse = token || accessToken;
-			if (!tokenToUse) {
-				const session = await supabase.auth.getSession();
-				tokenToUse = session.data.session?.access_token || null;
-			}
-
-			if (tokenToUse) {
-				const profileData = await Promise.race([
-					apiClient.getProfile(tokenToUse),
-					new Promise<never>((_, reject) =>
-						setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-					),
-				]);
-				setProfile(profileData);
-			} else {
-				setProfile(null);
-			}
-		} catch (error) {
-			console.error('[Auth] Error fetching profile:', error);
-			// Handle different error types
-			if (error instanceof Error) {
-				// 404 means profile doesn't exist yet (new user) - set to null so they can create one
-				if (error.message.includes('404') || error.message.includes('not found')) {
-					setProfile(null);
-				}
-				// 401 means auth error - clear profile
-				else if (error.message.includes('401') || error.message.includes('unauthorized')) {
-					setProfile(null);
-				}
-				// Other errors - don't clear profile, might be temporary network issue
-			}
-		} finally {
+	const fetchProfile = useCallback(
+		async (token?: string, setLoadingState = false) => {
 			if (setLoadingState) {
-				setLoading(false);
+				setLoading(true);
 			}
-		}
-	}, [accessToken, supabase.auth]);
+			try {
+				// Use provided token or get from cached state or fetch from session
+				let tokenToUse = token || accessToken;
+				if (!tokenToUse) {
+					const session = await supabase.auth.getSession();
+					tokenToUse = session.data.session?.access_token || null;
+				}
+
+				if (tokenToUse) {
+					const profileData = await Promise.race([
+						apiClient.getProfile(tokenToUse),
+						new Promise<never>((_, reject) =>
+							setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+						),
+					]);
+					setProfile(profileData);
+				} else {
+					setProfile(null);
+				}
+			} catch (error) {
+				console.error('[Auth] Error fetching profile:', error);
+				// Handle different error types
+				if (error instanceof Error) {
+					// 404 means profile doesn't exist yet (new user) - set to null so they can create one
+					if (error.message.includes('404') || error.message.includes('not found')) {
+						setProfile(null);
+					}
+					// 401 means auth error - clear profile
+					else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+						setProfile(null);
+					}
+					// Other errors - don't clear profile, might be temporary network issue
+				}
+			} finally {
+				if (setLoadingState) {
+					setLoading(false);
+				}
+			}
+		},
+		[accessToken, supabase.auth]
+	);
 
 	const refreshProfile = async () => {
 		if (user) {
-await fetchProfile();
+			await fetchProfile(undefined, false);
 		}
 	};
 

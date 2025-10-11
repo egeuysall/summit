@@ -29,7 +29,7 @@ const SKILL_OPTIONS = [
 ];
 
 export default function ProfilePage() {
-	const { profile, refreshProfile } = useAuth();
+	const { profile, refreshProfile, loading: authLoading } = useAuth();
 	const { execute, loading } = useApi();
 	const [isEditing, setIsEditing] = useState(false);
 	const [name, setName] = useState('');
@@ -80,9 +80,9 @@ export default function ProfilePage() {
 
 	const handleCancel = () => {
 		if (profile) {
-			setName(profile.name);
+			setName(profile.name || '');
 			setAvatarUrl(profile.avatar_url || '');
-			setSelectedSkills(profile.skills);
+			setSelectedSkills(profile.skills || []);
 		}
 		setIsEditing(false);
 	};
@@ -97,7 +97,7 @@ export default function ProfilePage() {
 			.slice(0, 2);
 	};
 
-	if (!profile) {
+	if (authLoading || !profile) {
 		return (
 			<div className="space-y-4">
 				<Skeleton className="h-8 w-64" />
