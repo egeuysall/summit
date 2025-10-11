@@ -28,3 +28,10 @@ export interface Transaction {
 export interface ApiError {
 	error: string;
 }
+
+export type Blog = {
+	slug: string;
+	title: string;
+	excerpt: string;
+	content: string;
+};

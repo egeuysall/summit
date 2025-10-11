@@ -1,27 +1,22 @@
-/**
- * Blog post highlights for the landing page.
- * Each blog object contains:
- *  - title: The headline of the blog post.
- *  - excerpt: A short summary or teaser for the post.
- *  - link: URL to the full blog post.
- */
-export const blogs = [
-  {
-    title: 'Mastering Your Workflow with Our New Task Manager',
-    excerpt:
-      'Discover how our new task management features can help you stay organized and ship code faster than ever before.',
-    link: '#', // TODO: Replace with actual blog post URL
-  },
-  {
-    title: "The Art of Documentation: A Developer's Guide",
-    excerpt:
-      'Good documentation is key to successful projects. Learn our best practices for documenting your work within the platform.',
-    link: '#', // TODO: Replace with actual blog post URL
-  },
-  {
-    title: 'Announcing Real-Time Editing',
-    excerpt:
-      "We're excited to introduce real-time collaborative editing for all your project documents. See how it works!",
-    link: '#', // TODO: Replace with actual blog post URL
-  },
+import type { Blog } from '@/types/other';
+
+export const blogs: Blog[] = [
+	{
+		slug: 'ege',
+		title: 'boo',
+		excerpt: 'hry',
+		content: '# Whaat ',
+	},
+	{
+		slug: 'getting-started-with-typescript',
+		title: 'Getting Started with TypeScript',
+		excerpt: 'Learn the basics of TypeScript and how to set up your first project.',
+		content: '# Getting Started with TypeScript\n\nTypeScript is a powerful superset of JavaScript that adds static typing to your code. In this guide, we will explore the fundamentals and get you up and running quickly.',
+	},
+	{
+		slug: 'modern-web-development',
+		title: 'Modern Web Development in 2024',
+		excerpt: 'Explore the latest trends and best practices in modern web development.',
+		content: '# Modern Web Development in 2024\n\nThe web development landscape is constantly evolving. From new frameworks to improved tooling, there has never been a better time to be a developer.',
+	},
 ];

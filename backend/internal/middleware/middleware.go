@@ -112,7 +112,7 @@ func UserIDFromContext(ctx context.Context) (string, bool) {
 // Cors returns a middleware that sets CORS headers.
 func Cors() func(next http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://www.summit.egeuysal.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
