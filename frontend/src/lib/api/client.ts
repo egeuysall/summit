@@ -1,198 +1,164 @@
-import type {
-  Profile,
-  CreateProfileRequest,
-  UpdateProfileRequest,
-} from '../../types/profiles';
-import type {
-  Task,
-  CreateTaskRequest,
-} from '../../types/tasks';
-import type {
-  LeaderboardEntry,
-  Reward,
-  Transaction,
-  ApiError,
-} from '../../types/other';
+import type { Profile, CreateProfileRequest, UpdateProfileRequest } from '../../types/profiles';
+import type { Task, CreateTaskRequest } from '../../types/tasks';
+import type { LeaderboardEntry, Reward, Transaction, ApiError } from '../../types/other';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 class ApiClient {
-  private baseUrl: string;
+	private baseUrl: string;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
+	constructor(baseUrl: string) {
+		this.baseUrl = baseUrl;
+	}
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+		const url = `${this.baseUrl}${endpoint}`;
 
-    console.log('[ApiClient] Making request to:', url, 'method:', options.method || 'GET');
+		// Add timeout to prevent hanging requests
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => {
+			controller.abort();
+		}, 30000);
 
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.log('[ApiClient] Request timeout, aborting...');
-      controller.abort();
-    }, 30000); // 30 second timeout
+		try {
+			const response = await fetch(url, {
+				...options,
+				headers: {
+					'Content-Type': 'application/json',
+					...options.headers,
+				},
+				signal: controller.signal,
+			});
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        signal: controller.signal,
-      });
+			clearTimeout(timeoutId);
 
-      clearTimeout(timeoutId);
+			if (!response.ok) {
+				const error: ApiError = await response.json().catch(() => ({
+					error: 'An error occurred',
+				}));
+				throw new Error(error.error);
+			}
 
-      console.log('[ApiClient] Response status:', response.status, 'ok:', response.ok);
+			const data = await response.json();
+			return data;
+		} catch (err) {
+			clearTimeout(timeoutId);
+			if (err instanceof Error && err.name === 'AbortError') {
+				console.error('[ApiClient] Request aborted due to timeout');
+				throw new Error('Request timeout - please check your connection');
+			}
+			console.error('[ApiClient] Request failed:', err);
+			throw err;
+		}
+	}
 
-      if (!response.ok) {
-        const error: ApiError = await response.json().catch(() => ({
-          error: 'An error occurred',
-        }));
-        console.error('[ApiClient] Error response:', error);
-        throw new Error(error.error);
-      }
+	private getAuthHeaders(token?: string): HeadersInit {
+		if (!token) return {};
+		return {
+			Authorization: `Bearer ${token}`,
+		};
+	}
 
-      const data = await response.json();
-      console.log('[ApiClient] Response data received:', !!data);
-      return data;
-    } catch (err) {
-      clearTimeout(timeoutId);
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.error('[ApiClient] Request aborted due to timeout');
-        throw new Error('Request timeout - please check your connection');
-      }
-      console.error('[ApiClient] Request failed:', err);
-      throw err;
-    }
-  }
+	// Public endpoints
+	async getLeaderboard(): Promise<LeaderboardEntry[]> {
+		return this.request<LeaderboardEntry[]>('/v1/leaderboard');
+	}
 
-  private getAuthHeaders(token?: string): HeadersInit {
-    if (!token) return {};
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }
+	async listRewards(): Promise<Reward[]> {
+		return this.request<Reward[]>('/v1/rewards');
+	}
 
-  // Public endpoints
-  async getLeaderboard(): Promise<LeaderboardEntry[]> {
-    return this.request<LeaderboardEntry[]>('/v1/leaderboard');
-  }
+	async listTasks(): Promise<Task[]> {
+		return this.request<Task[]>('/v1/tasks');
+	}
 
-  async listRewards(): Promise<Reward[]> {
-    return this.request<Reward[]>('/v1/rewards');
-  }
+	async getTask(taskId: string): Promise<Task> {
+		return this.request<Task>(`/v1/tasks/${taskId}`);
+	}
 
-  async listTasks(): Promise<Task[]> {
-    return this.request<Task[]>('/v1/tasks');
-  }
+	// Protected endpoints
+	async getProfile(token: string): Promise<Profile> {
+		return this.request<Profile>('/v1/profile', {
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async getTask(taskId: string): Promise<Task> {
-    return this.request<Task>(`/v1/tasks/${taskId}`);
-  }
+	async createProfile(token: string, data: CreateProfileRequest): Promise<Profile> {
+		return this.request<Profile>('/v1/profile', {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+			body: JSON.stringify(data),
+		});
+	}
 
-  // Protected endpoints
-  async getProfile(token: string): Promise<Profile> {
-    return this.request<Profile>('/v1/profile', {
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async updateProfile(token: string, data: UpdateProfileRequest): Promise<Profile> {
+		return this.request<Profile>('/v1/profile', {
+			method: 'PUT',
+			headers: this.getAuthHeaders(token),
+			body: JSON.stringify(data),
+		});
+	}
 
-  async createProfile(
-    token: string,
-    data: CreateProfileRequest
-  ): Promise<Profile> {
-    return this.request<Profile>('/v1/profile', {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-      body: JSON.stringify(data),
-    });
-  }
+	async createTask(token: string, data: CreateTaskRequest): Promise<Task> {
+		return this.request<Task>('/v1/tasks', {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+			body: JSON.stringify(data),
+		});
+	}
 
-  async updateProfile(
-    token: string,
-    data: UpdateProfileRequest
-  ): Promise<Profile> {
-    return this.request<Profile>('/v1/profile', {
-      method: 'PUT',
-      headers: this.getAuthHeaders(token),
-      body: JSON.stringify(data),
-    });
-  }
+	async getMyPostedTasks(token: string): Promise<Task[]> {
+		return this.request<Task[]>('/v1/tasks/my-posted', {
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async createTask(token: string, data: CreateTaskRequest): Promise<Task> {
-    return this.request<Task>('/v1/tasks', {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-      body: JSON.stringify(data),
-    });
-  }
+	async getMyClaimedTasks(token: string): Promise<Task[]> {
+		return this.request<Task[]>('/v1/tasks/my-claimed', {
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async getMyPostedTasks(token: string): Promise<Task[]> {
-    return this.request<Task[]>('/v1/tasks/my-posted', {
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async deleteTask(token: string, taskId: string): Promise<void> {
+		return this.request<void>(`/v1/tasks/${taskId}`, {
+			method: 'DELETE',
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async getMyClaimedTasks(token: string): Promise<Task[]> {
-    return this.request<Task[]>('/v1/tasks/my-claimed', {
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async claimTask(token: string, taskId: string): Promise<Task> {
+		return this.request<Task>(`/v1/tasks/${taskId}/claim`, {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async deleteTask(token: string, taskId: string): Promise<void> {
-    return this.request<void>(`/v1/tasks/${taskId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async completeTask(token: string, taskId: string): Promise<Task> {
+		return this.request<Task>(`/v1/tasks/${taskId}/complete`, {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async claimTask(token: string, taskId: string): Promise<Task> {
-    return this.request<Task>(`/v1/tasks/${taskId}/claim`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async confirmTask(token: string, taskId: string): Promise<Task> {
+		return this.request<Task>(`/v1/tasks/${taskId}/confirm`, {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async completeTask(token: string, taskId: string): Promise<Task> {
-    return this.request<Task>(`/v1/tasks/${taskId}/complete`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-    });
-  }
+	async cancelTask(token: string, taskId: string): Promise<Task> {
+		return this.request<Task>(`/v1/tasks/${taskId}/cancel`, {
+			method: 'POST',
+			headers: this.getAuthHeaders(token),
+		});
+	}
 
-  async confirmTask(token: string, taskId: string): Promise<Task> {
-    return this.request<Task>(`/v1/tasks/${taskId}/confirm`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-    });
-  }
-
-  async cancelTask(token: string, taskId: string): Promise<Task> {
-    return this.request<Task>(`/v1/tasks/${taskId}/cancel`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-    });
-  }
-
-  async getTransactions(
-    token: string,
-    limit: number = 50
-  ): Promise<Transaction[]> {
-    return this.request<Transaction[]>(
-      `/v1/transactions?limit=${limit}`,
-      {
-        headers: this.getAuthHeaders(token),
-      }
-    );
-  }
+	async getTransactions(token: string, limit: number = 50): Promise<Transaction[]> {
+		return this.request<Transaction[]>(`/v1/transactions?limit=${limit}`, {
+			headers: this.getAuthHeaders(token),
+		});
+	}
 }
 
 export const apiClient = new ApiClient(API_URL);

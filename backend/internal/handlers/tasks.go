@@ -111,7 +111,6 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		Credits: -req.CreditReward, // Negative because credits were spent
 	})
 	if err != nil {
-		// Log error but don't fail the request
 		utils.SendError(w, "Task created but failed to record transaction", http.StatusInternalServerError)
 		return
 	}
@@ -208,7 +207,6 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		Credits: task.CreditReward, // Positive because credits were refunded
 	})
 	if err != nil {
-		// Log error but don't fail the request
 		utils.SendError(w, "Task deleted and credits refunded but failed to record transaction", http.StatusInternalServerError)
 		return
 	}
@@ -396,7 +394,6 @@ func ConfirmTask(w http.ResponseWriter, r *http.Request) {
 		Credits: task.CreditReward, // Positive because credits were earned
 	})
 	if err != nil {
-		// Log error but don't fail the request
 		utils.SendError(w, "Task confirmed and credits transferred but failed to record transaction", http.StatusInternalServerError)
 		return
 	}
@@ -472,7 +469,6 @@ func CancelTask(w http.ResponseWriter, r *http.Request) {
 		Credits: task.CreditReward, // Positive because credits were refunded
 	})
 	if err != nil {
-		// Log error but don't fail the request
 		utils.SendError(w, "Task cancelled and credits refunded but failed to record transaction", http.StatusInternalServerError)
 		return
 	}

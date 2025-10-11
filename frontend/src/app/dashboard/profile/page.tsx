@@ -37,7 +37,6 @@ export default function ProfilePage() {
 	const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
 	useEffect(() => {
-		console.log('[Profile] Profile data:', profile);
 		if (profile) {
 			setName(profile.name || '');
 			setAvatarUrl(profile.avatar_url || '');

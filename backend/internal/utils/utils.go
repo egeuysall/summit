@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	generated "github.com/egeuysall/summit/internal/supabase/generated"
@@ -18,16 +17,12 @@ func Init(q *generated.Queries) {
 
 func SendJson(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": data}); err != nil {
-		log.Printf("JSON encoding failed: %v", err)
-	}
+	json.NewEncoder(w).Encode(map[string]interface{}{"data": data})
 }
 
 func SendError(w http.ResponseWriter, message string, statusCode int) {
 	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(map[string]string{"error": message}); err != nil {
-		log.Printf("Error encoding failed: %v", err)
-	}
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
 func ParseUUID(str string) (pgtype.UUID, error) {

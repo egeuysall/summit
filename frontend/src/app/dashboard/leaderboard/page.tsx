@@ -14,25 +14,25 @@ export default function LeaderboardPage() {
 
 	useEffect(() => {
 		fetchLeaderboard();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const fetchLeaderboard = async () => {
 		try {
 			const result = await apiClient.getLeaderboard();
-			console.log('[Leaderboard] Fetch result:', result);
-
-			// Handle both direct array and {data: array} response formats
 			let leaderboardData: LeaderboardEntry[] = [];
+
 			if (result) {
 				if (Array.isArray(result)) {
 					leaderboardData = result;
-				} else if (result.data && Array.isArray(result.data)) {
-					leaderboardData = result.data;
+				} else if (
+					typeof result === 'object' &&
+					'data' in result &&
+					Array.isArray((result as { data: unknown }).data)
+				) {
+					leaderboardData = (result as { data: LeaderboardEntry[] }).data;
 				}
 			}
 
-			console.log('[Leaderboard] Setting leaderboard, count:', leaderboardData.length);
 			setLeaderboard(leaderboardData);
 		} catch (error) {
 			console.error('Error fetching leaderboard:', error);

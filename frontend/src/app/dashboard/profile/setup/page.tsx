@@ -44,8 +44,6 @@ export default function ProfileSetupPage() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		console.log('[ProfileSetup] Submit started');
-
 		if (!name.trim()) {
 			toast.error('Please enter your name');
 			return;
@@ -56,14 +54,7 @@ export default function ProfileSetupPage() {
 			return;
 		}
 
-		console.log('[ProfileSetup] Calling execute with profile data:', {
-			name: name.trim(),
-			avatar_url: avatarUrl.trim() || undefined,
-			skills: selectedSkills,
-		});
-
 		const result = await execute((token) => {
-			console.log('[ProfileSetup] Token received:', !!token);
 			return apiClient.createProfile(token, {
 				name: name.trim(),
 				avatar_url: avatarUrl.trim() || undefined,
@@ -71,15 +62,9 @@ export default function ProfileSetupPage() {
 			});
 		});
 
-		console.log('[ProfileSetup] Execute result:', result);
-
 		if (result) {
 			toast.success('Profile created successfully!');
-			console.log('[ProfileSetup] Profile creation result:', result);
 
-			// Force a hard refresh to reload the profile from the server
-			// This ensures the auth context picks up the new profile
-			console.log('[ProfileSetup] Forcing page reload to fetch profile');
 			window.location.href = '/dashboard/tasks';
 		} else {
 			console.error('[ProfileSetup] Execute returned null/undefined');

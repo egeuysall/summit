@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -32,7 +31,6 @@ func RequireAuth() func(http.Handler) http.Handler {
 			}
 
 			if supabaseJWTSecret == "" {
-				log.Println("WARNING: SUPABASE_JWT_SECRET is not set")
 				utils.SendError(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
@@ -58,7 +56,6 @@ func RequireAuth() func(http.Handler) http.Handler {
 			})
 
 			if err != nil {
-				log.Printf("JWT validation error: %v", err)
 				utils.SendError(w, "Unauthorized: invalid token", http.StatusUnauthorized)
 				return
 			}
@@ -75,13 +72,11 @@ func RequireAuth() func(http.Handler) http.Handler {
 			}
 
 			if iss, ok := claims["iss"].(string); !ok || (supabaseIssuer != "" && iss != supabaseIssuer) {
-				log.Printf("Invalid issuer: %v, expected: %v", iss, supabaseIssuer)
 				utils.SendError(w, "Unauthorized: invalid issuer", http.StatusUnauthorized)
 				return
 			}
 
 			if aud, ok := claims["aud"].(string); !ok || (supabaseAudience != "" && aud != supabaseAudience) {
-				log.Printf("Invalid audience: %v, expected: %v", aud, supabaseAudience)
 				utils.SendError(w, "Unauthorized: invalid audience", http.StatusUnauthorized)
 				return
 			}
@@ -103,13 +98,11 @@ func RequireAuth() func(http.Handler) http.Handler {
 	}
 }
 
-// UserIDFromContext extracts the user ID from the request context.
 func UserIDFromContext(ctx context.Context) (string, bool) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	return userID, ok
 }
 
-// Cors returns a middleware that sets CORS headers.
 func Cors() func(next http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://www.summit.egeuysal.com"},
@@ -120,7 +113,6 @@ func Cors() func(next http.Handler) http.Handler {
 	})
 }
 
-// SetContentType sets Content-Type header to application/json for all responses.
 func SetContentType() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -27,12 +27,9 @@ func Connect() *pgxpool.Pool {
 	config.MinConns = 2
 	config.MaxConnIdleTime = 30 * time.Minute
 
-	// Set runtime parameters to bypass RLS for service role
-	// This allows the backend to perform operations as the service role
 	if config.ConnConfig.RuntimeParams == nil {
 		config.ConnConfig.RuntimeParams = make(map[string]string)
 	}
-	// Set the role to postgres (superuser) to bypass RLS
 	config.ConnConfig.RuntimeParams["role"] = "postgres"
 
 	ctx := context.Background()
@@ -48,6 +45,5 @@ func Connect() *pgxpool.Pool {
 		log.Fatalf("Unable to ping db: %s", err)
 	}
 
-	log.Println("Successfully connected Supabase database with service role")
 	return pool
 }

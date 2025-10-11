@@ -1,21 +1,3 @@
-/**
- * Landing Page Component
- *
- * This component renders the main landing page for the developer workspace platform.
- * It includes the following sections:
- *  - Hero section with headline, description, and call-to-action button
- *  - Features grid showcasing platform capabilities
- *  - Workflow highlight section
- *  - "Get started in minutes" steps
- *  - Pricing plans
- *  - Blog highlights
- *
- * Data for features, pricing, how it works, and blogs are imported from their respective modules.
- * UI components are imported from the component library and Lucide icons.
- */
-
-import React from 'react';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { features } from '@/lib/features';

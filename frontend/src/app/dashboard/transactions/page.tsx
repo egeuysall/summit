@@ -24,11 +24,7 @@ export default function TransactionsPage() {
 	}, [authContextLoading, authLoading]);
 
 	const fetchTransactions = async () => {
-		console.log('[Transactions] Fetching transactions...');
 		const result = await executeWhenReady((token) => apiClient.getTransactions(token, 50));
-		console.log('[Transactions] Fetch result:', result);
-
-		// Handle both direct array and {data: array} response formats
 		let transactionsData: Transaction[] = [];
 		if (result) {
 			if (Array.isArray(result)) {
@@ -38,7 +34,6 @@ export default function TransactionsPage() {
 			}
 		}
 
-		console.log('[Transactions] Setting transactions, count:', transactionsData.length);
 		setTransactions(transactionsData);
 		setLoading(false);
 	};

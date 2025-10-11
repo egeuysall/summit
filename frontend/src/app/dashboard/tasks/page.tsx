@@ -42,9 +42,6 @@ export default function TasksPage() {
 	const fetchTasks = async () => {
 		try {
 			const result = await apiClient.listTasks();
-			console.log('[Tasks] Fetch result:', result);
-
-			// Handle both direct array and {data: array} response formats
 			let tasksData: Task[] = [];
 			if (result) {
 				if (Array.isArray(result)) {
@@ -54,7 +51,6 @@ export default function TasksPage() {
 				}
 			}
 
-			console.log('[Tasks] Setting tasks, count:', tasksData.length);
 			setTasks(tasksData);
 		} catch (error) {
 			console.error('Error fetching tasks:', error);

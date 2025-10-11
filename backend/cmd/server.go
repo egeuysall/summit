@@ -28,7 +28,6 @@ func main() {
 		log.Fatal("PORT not set in environment")
 	}
 
-	log.Printf("🚀 Summit API starting on http://localhost:%s", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), api.Router()); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

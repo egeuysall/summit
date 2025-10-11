@@ -37,24 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			// Use provided token or get from cached state or fetch from session
 			let tokenToUse = token || accessToken;
 			if (!tokenToUse) {
-				console.log('[Auth] No token provided, fetching from session...');
 				const session = await supabase.auth.getSession();
 				tokenToUse = session.data.session?.access_token || null;
 			}
 
-			console.log('[Auth] Fetching profile, has token:', !!tokenToUse, 'user id:', currentUser?.id);
 			if (tokenToUse) {
-				// Add timeout to prevent hanging
 				const profileData = await Promise.race([
 					apiClient.getProfile(tokenToUse),
 					new Promise<never>((_, reject) =>
 						setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-					)
+					),
 				]);
-				console.log('[Auth] Profile fetched successfully:', !!profileData);
 				setProfile(profileData);
 			} else {
-				console.log('[Auth] No token available, setting profile to null');
 				setProfile(null);
 			}
 		} catch (error) {
@@ -63,12 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			if (error instanceof Error) {
 				// 404 means profile doesn't exist yet (new user) - set to null so they can create one
 				if (error.message.includes('404') || error.message.includes('not found')) {
-					console.log('[Auth] Profile not found (404), user needs to create profile');
 					setProfile(null);
 				}
 				// 401 means auth error - clear profile
 				else if (error.message.includes('401') || error.message.includes('unauthorized')) {
-					console.log('[Auth] Auth error, clearing profile');
 					setProfile(null);
 				}
 				// Other errors - don't clear profile, might be temporary network issue
@@ -88,21 +81,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const getAccessToken = async (): Promise<string | null> => {
 		try {
-			console.log('[Auth] getAccessToken called, cached token:', !!accessToken);
-
 			// Return cached token if available
 			if (accessToken) {
-				console.log('[Auth] getAccessToken: returning cached token');
 				return accessToken;
 			}
-
-			console.log('[Auth] getAccessToken: fetching fresh session');
-			const { data: { session }, error } = await supabase.auth.getSession();
+			const {
+				data: { session },
+				error,
+			} = await supabase.auth.getSession();
 			if (error) {
 				console.error('[Auth] getAccessToken error:', error);
 				return null;
 			}
-			console.log('[Auth] getAccessToken: has session:', !!session, 'has token:', !!session?.access_token);
 
 			// Cache the token
 			if (session?.access_token) {
@@ -123,48 +113,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		// Add a safety timeout to prevent infinite loading
 		const safetyTimeout = setTimeout(() => {
 			if (mounted && !initializedRef.current) {
-				console.log('[Auth] Safety timeout reached, forcing loading to false');
 				setLoading(false);
 			}
 		}, 5000); // 5 second safety timeout
 
 		const initAuth = async () => {
-			console.log('[Auth] Initializing auth... attempt:', initializationAttempts + 1);
 			try {
 				initializationAttempts++;
 				const {
 					data: { session },
 				} = await supabase.auth.getSession();
 
-				console.log('[Auth] Initial session:', !!session?.user, 'session id:', session?.user?.id);
-
 				if (!mounted) return;
 
 				setUser(session?.user ?? null);
 				// Cache the access token
 				if (session?.access_token) {
-					console.log('[Auth] Caching access token from initial session');
 					setAccessToken(session.access_token);
 				}
 				if (session?.user && session?.access_token) {
 					await fetchProfile(session.user, session.access_token);
 				}
 				initializedRef.current = true;
-				console.log('[Auth] Auth initialization completed successfully');
 			} catch (error) {
 				console.error('[Auth] Error initializing auth:', error);
 
 				// Retry initialization if not at max attempts
 				if (initializationAttempts < maxRetries && mounted) {
-					console.log('[Auth] Retrying initialization in 1s...');
 					setTimeout(() => {
 						if (mounted) initAuth();
 					}, 1000);
 					return;
 				}
 			} finally {
-				if (mounted && (initialized || initializationAttempts >= maxRetries)) {
-					console.log('[Auth] Setting loading to false, initialized:', initialized);
+				if (mounted && (initializedRef.current || initializationAttempts >= maxRetries)) {
 					clearTimeout(safetyTimeout);
 					setLoading(false);
 				}
@@ -176,21 +158,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange(async (event, session) => {
-			console.log(
-				'[Auth] State change:',
-				event,
-				!!session?.user,
-				'initialized:',
-				initializedRef.current,
-				'user id:',
-				session?.user?.id
-			);
-
 			if (!mounted) return;
 
 			// Handle different auth events
 			if (event === 'SIGNED_OUT') {
-				console.log('[Auth] User signed out, clearing state');
 				setUser(null);
 				setProfile(null);
 				setAccessToken(null);
@@ -198,31 +169,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				return;
 			}
 
-			// Only process SIGNED_IN event (user just logged in)
-			// Ignore INITIAL_SESSION completely as it's handled by initAuth
-			// Don't re-fetch if already initialized (prevents infinite loop)
 			if (event === 'SIGNED_IN' && !initializedRef.current) {
-				console.log('[Auth] User signed in, fetching profile');
 				setLoading(true);
 				setUser(session?.user ?? null);
 				// Cache the access token
 				if (session?.access_token) {
-					console.log('[Auth] Caching access token from SIGNED_IN event');
 					setAccessToken(session.access_token);
 				}
 				if (session?.user && session?.access_token) {
 					await fetchProfile(session.user, session.access_token);
 				}
 				setLoading(false);
-			} else if (event === 'SIGNED_IN' && initializedRef.current) {
-				console.log('[Auth] SIGNED_IN event received but already initialized, skipping profile fetch');
 			} else if (event === 'TOKEN_REFRESHED' && session?.user) {
-				console.log('[Auth] Token refreshed, updating user and profile');
 				// Silently update user and profile without loading state
 				setUser(session.user);
 				// Update cached token
 				if (session?.access_token) {
-					console.log('[Auth] Updating cached access token from TOKEN_REFRESHED');
 					setAccessToken(session.access_token);
 				}
 				await fetchProfile(session.user, session.access_token);

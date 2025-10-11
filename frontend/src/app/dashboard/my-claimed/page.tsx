@@ -15,11 +15,7 @@ export default function MyClaimedTasksPage() {
 	const { loading: authContextLoading } = useAuth();
 
 	const fetchTasks = async () => {
-		console.log('[MyClaimed] Fetching tasks...');
 		const result = await executeWhenReady((token) => apiClient.getMyClaimedTasks(token));
-		console.log('[MyClaimed] Fetch result:', result);
-
-		// Handle both direct array and {data: array} response formats
 		let tasksData: Task[] = [];
 		if (result) {
 			if (Array.isArray(result)) {
@@ -29,7 +25,6 @@ export default function MyClaimedTasksPage() {
 			}
 		}
 
-		console.log('[MyClaimed] Setting tasks, count:', tasksData.length);
 		setTasks(tasksData);
 		setLoading(false);
 	};

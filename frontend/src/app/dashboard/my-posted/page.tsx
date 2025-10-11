@@ -8,15 +8,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Task } from '@/types/tasks';
 
 export default function MyPostedTasksPage() {
-	console.log('[MyPosted] Component rendering');
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
 	const { executeWhenReady, isReady, loading: authLoading } = useAuthenticatedApi();
 
-	console.log('[MyPosted] State:', { isReady, authLoading, loading, tasksCount: tasks.length });
-
 	useEffect(() => {
-		console.log('[MyPosted] useEffect triggered, isReady:', isReady);
 		// Only fetch tasks when auth is ready
 		if (isReady) {
 			fetchTasks();
@@ -25,11 +21,7 @@ export default function MyPostedTasksPage() {
 	}, [isReady]);
 
 	const fetchTasks = async () => {
-		console.log('[MyPosted] Fetching tasks...');
 		const result = await executeWhenReady((token) => apiClient.getMyPostedTasks(token));
-		console.log('[MyPosted] Fetch result:', result);
-
-		// Handle both direct array and {data: array} response formats
 		let tasksData: Task[] = [];
 		if (result) {
 			if (Array.isArray(result)) {
@@ -39,14 +31,12 @@ export default function MyPostedTasksPage() {
 			}
 		}
 
-		console.log('[MyPosted] Setting tasks, count:', tasksData.length);
 		setTasks(tasksData);
 		setLoading(false);
 	};
 
 	// Show loading while auth is initializing or while fetching tasks
 	if (authLoading || loading) {
-		console.log('[MyPosted] Rendering loading skeleton');
 		return (
 			<div className="space-y-6">
 				<Skeleton className="h-10 w-64" />
@@ -59,7 +49,6 @@ export default function MyPostedTasksPage() {
 		);
 	}
 
-	console.log('[MyPosted] Rendering content, tasks count:', tasks.length);
 	return (
 		<div className="space-y-6">
 			<h1 className="text-h3 font-heading font-semibold">My posted tasks</h1>
