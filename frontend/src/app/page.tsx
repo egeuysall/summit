@@ -106,39 +106,6 @@ const Landing: React.FC = () => {
 				</div>
 			</section>
 
-			{/* Pricing Section */}
-			<section className="w-full flex flex-col items-center gap-lg">
-				<h2 className="w-3/4 text-center">Pricing</h2>
-				<p className="w-3/4 text-center text-neutral-700 dark:text-neutral-300">
-					Choose a plan that works for you.
-				</p>
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-md w-full">
-					{pricing.map((tier, index) => (
-						<Card key={index}>
-							<CardHeader>
-								<CardTitle>{tier.title}</CardTitle>
-								<CardDescription>{tier.description}</CardDescription>
-							</CardHeader>
-							<CardContent className="flex flex-col gap-lg">
-								<div className="flex items-baseline gap-xs">
-									<span className="text-4xl font-bold">{tier.price}</span>
-									{tier.price !== 'Custom' && <span className="text-neutral-500">/ month</span>}
-								</div>
-								<ul className="flex flex-col gap-sm">
-									{tier.features.map((feature, i) => (
-										<li key={i} className="flex items-center gap-xs">
-											<Check className="w-4 h-4 text-primary-500" />
-											{feature}
-										</li>
-									))}
-								</ul>
-								<Button>{tier.cta}</Button>
-							</CardContent>
-						</Card>
-					))}
-				</div>
-			</section>
-
 			{/* Blog Highlights Section */}
 			<section className="w-full flex flex-col items-center gap-lg">
 				<h2 className="w-3/4 text-center">From our Blog</h2>
