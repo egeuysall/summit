@@ -29,22 +29,49 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    console.log('[ApiClient] Making request to:', url, 'method:', options.method || 'GET');
 
-    if (!response.ok) {
-      const error: ApiError = await response.json().catch(() => ({
-        error: 'An error occurred',
-      }));
-      throw new Error(error.error);
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log('[ApiClient] Request timeout, aborting...');
+      controller.abort();
+    }, 30000); // 30 second timeout
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('[ApiClient] Response status:', response.status, 'ok:', response.ok);
+
+      if (!response.ok) {
+        const error: ApiError = await response.json().catch(() => ({
+          error: 'An error occurred',
+        }));
+        console.error('[ApiClient] Error response:', error);
+        throw new Error(error.error);
+      }
+
+      const data = await response.json();
+      console.log('[ApiClient] Response data received:', !!data);
+      return data;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.error('[ApiClient] Request aborted due to timeout');
+        throw new Error('Request timeout - please check your connection');
+      }
+      console.error('[ApiClient] Request failed:', err);
+      throw err;
     }
-
-    return response.json();
   }
 
   private getAuthHeaders(token?: string): HeadersInit {

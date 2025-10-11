@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/auth-context';
 import type { Task } from '@/types/tasks';
 
 export default function TasksPage() {
@@ -22,28 +23,54 @@ export default function TasksPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [skillFilter, setSkillFilter] = useState<string>('all');
+	const { loading: authLoading } = useAuth();
 	const router = useRouter();
 
 	useEffect(() => {
-		fetchTasks();
-	}, []);
+		// Only fetch tasks when auth is ready
+		if (!authLoading) {
+			fetchTasks();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authLoading]);
 
 	useEffect(() => {
 		filterTasks();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [tasks, searchQuery, skillFilter]);
 
 	const fetchTasks = async () => {
 		try {
-			const data = await apiClient.listTasks();
-			setTasks(data);
+			const result = await apiClient.listTasks();
+			console.log('[Tasks] Fetch result:', result);
+
+			// Handle both direct array and {data: array} response formats
+			let tasksData: Task[] = [];
+			if (result) {
+				if (Array.isArray(result)) {
+					tasksData = result;
+				} else if (result.data && Array.isArray(result.data)) {
+					tasksData = result.data;
+				}
+			}
+
+			console.log('[Tasks] Setting tasks, count:', tasksData.length);
+			setTasks(tasksData);
 		} catch (error) {
 			console.error('Error fetching tasks:', error);
+			setTasks([]);
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	const filterTasks = () => {
+		// Ensure tasks is an array
+		if (!Array.isArray(tasks)) {
+			setFilteredTasks([]);
+			return;
+		}
+
 		let filtered = tasks;
 
 		if (searchQuery) {
@@ -61,9 +88,12 @@ export default function TasksPage() {
 		setFilteredTasks(filtered);
 	};
 
-	const uniqueSkills = Array.from(new Set(tasks.map((task) => task.skill)));
+	const uniqueSkills = Array.isArray(tasks)
+		? Array.from(new Set(tasks.map((task) => task.skill)))
+		: [];
 
-	if (loading) {
+	// Show loading while auth is initializing or while fetching tasks
+	if (authLoading || loading) {
 		return (
 			<div className="space-y-6">
 				<Skeleton className="h-10 w-full" />

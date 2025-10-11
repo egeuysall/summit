@@ -5,26 +5,45 @@ import { useApi } from '@/hooks/use-api';
 import { apiClient } from '@/lib/api/client';
 import { TaskCard } from '@/components/blocks/task-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/auth-context';
 import type { Task } from '@/types/tasks';
 
 export default function MyClaimedTasksPage() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
-	const { execute } = useApi();
-
-	useEffect(() => {
-		fetchTasks();
-	}, []);
+	const { executeWhenReady, authLoading } = useApi();
+	const { loading: authContextLoading } = useAuth();
 
 	const fetchTasks = async () => {
-		const result = await execute((token) => apiClient.getMyClaimedTasks(token));
+		console.log('[MyClaimed] Fetching tasks...');
+		const result = await executeWhenReady((token) => apiClient.getMyClaimedTasks(token));
+		console.log('[MyClaimed] Fetch result:', result);
+
+		// Handle both direct array and {data: array} response formats
+		let tasksData: Task[] = [];
 		if (result) {
-			setTasks(result);
+			if (Array.isArray(result)) {
+				tasksData = result;
+			} else if (result.data && Array.isArray(result.data)) {
+				tasksData = result.data;
+			}
 		}
+
+		console.log('[MyClaimed] Setting tasks, count:', tasksData.length);
+		setTasks(tasksData);
 		setLoading(false);
 	};
 
-	if (loading) {
+	useEffect(() => {
+		// Only fetch tasks when auth is ready
+		if (!authContextLoading && !authLoading) {
+			fetchTasks();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authContextLoading, authLoading]);
+
+	// Show loading while auth is initializing or while fetching tasks
+	if (authContextLoading || authLoading || loading) {
 		return (
 			<div className="space-y-6">
 				<Skeleton className="h-10 w-64" />

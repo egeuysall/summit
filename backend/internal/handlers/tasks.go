@@ -104,6 +104,18 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create transaction record for task posting
+	_, err = utils.Queries.CreateTransaction(r.Context(), generated.CreateTransactionParams{
+		UserID:  uuid,
+		TaskID:  pgtype.UUID{Bytes: task.ID.Bytes, Valid: true},
+		Credits: -req.CreditReward, // Negative because credits were spent
+	})
+	if err != nil {
+		// Log error but don't fail the request
+		utils.SendError(w, "Task created but failed to record transaction", http.StatusInternalServerError)
+		return
+	}
+
 	utils.SendJson(w, models.ToTaskResponse(task), http.StatusCreated)
 }
 
@@ -186,6 +198,18 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		utils.SendError(w, "Task deleted but failed to refund credits", http.StatusInternalServerError)
+		return
+	}
+
+	// Create transaction record for refund
+	_, err = utils.Queries.CreateTransaction(r.Context(), generated.CreateTransactionParams{
+		UserID:  uuid,
+		TaskID:  pgtype.UUID{Bytes: taskID.Bytes, Valid: true},
+		Credits: task.CreditReward, // Positive because credits were refunded
+	})
+	if err != nil {
+		// Log error but don't fail the request
+		utils.SendError(w, "Task deleted and credits refunded but failed to record transaction", http.StatusInternalServerError)
 		return
 	}
 
@@ -365,6 +389,18 @@ func ConfirmTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create transaction record for reward
+	_, err = utils.Queries.CreateTransaction(r.Context(), generated.CreateTransactionParams{
+		UserID:  task.ClaimedByID,
+		TaskID:  pgtype.UUID{Bytes: taskID.Bytes, Valid: true},
+		Credits: task.CreditReward, // Positive because credits were earned
+	})
+	if err != nil {
+		// Log error but don't fail the request
+		utils.SendError(w, "Task confirmed and credits transferred but failed to record transaction", http.StatusInternalServerError)
+		return
+	}
+
 	// Fetch and return the updated task
 	updatedTask, err := utils.Queries.GetTask(r.Context(), taskID)
 	if err != nil {
@@ -426,6 +462,18 @@ func CancelTask(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		utils.SendError(w, "Task cancelled but failed to refund credits", http.StatusInternalServerError)
+		return
+	}
+
+	// Create transaction record for refund
+	_, err = utils.Queries.CreateTransaction(r.Context(), generated.CreateTransactionParams{
+		UserID:  uuid,
+		TaskID:  pgtype.UUID{Bytes: taskID.Bytes, Valid: true},
+		Credits: task.CreditReward, // Positive because credits were refunded
+	})
+	if err != nil {
+		// Log error but don't fail the request
+		utils.SendError(w, "Task cancelled and credits refunded but failed to record transaction", http.StatusInternalServerError)
 		return
 	}
 

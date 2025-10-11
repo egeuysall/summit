@@ -14,14 +14,29 @@ export default function LeaderboardPage() {
 
 	useEffect(() => {
 		fetchLeaderboard();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const fetchLeaderboard = async () => {
 		try {
-			const data = await apiClient.getLeaderboard();
-			setLeaderboard(data);
+			const result = await apiClient.getLeaderboard();
+			console.log('[Leaderboard] Fetch result:', result);
+
+			// Handle both direct array and {data: array} response formats
+			let leaderboardData: LeaderboardEntry[] = [];
+			if (result) {
+				if (Array.isArray(result)) {
+					leaderboardData = result;
+				} else if (result.data && Array.isArray(result.data)) {
+					leaderboardData = result.data;
+				}
+			}
+
+			console.log('[Leaderboard] Setting leaderboard, count:', leaderboardData.length);
+			setLeaderboard(leaderboardData);
 		} catch (error) {
 			console.error('Error fetching leaderboard:', error);
+			setLeaderboard([]);
 		} finally {
 			setLoading(false);
 		}
@@ -57,7 +72,7 @@ export default function LeaderboardPage() {
 	}
 
 	return (
-		<div className="space-y-6 max-w-4xl">
+		<div className="space-y-6">
 			<h1 className="text-h3 font-heading font-semibold">Leaderboard</h1>
 
 			{leaderboard.length === 0 ? (

@@ -78,7 +78,8 @@ const Landing: React.FC = () => {
 			{/* Workflow Highlight Section */}
 			<section className="w-full flex flex-col items-center gap-lg bg-primary-300 dark:bg-primary-700 p-xl rounded-md">
 				<h2 className="md:w-3/4 text-center">
-					Better workflows <br /> make better <span className="italic">things.</span>
+					Welcome to the new future of the human race powered by{' '}
+					<span className="italic">Summit.</span>
 				</h2>
 			</section>
 

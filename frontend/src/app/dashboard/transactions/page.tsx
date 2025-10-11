@@ -6,22 +6,40 @@ import { apiClient } from '@/lib/api/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/auth-context';
 import type { Transaction } from '@/types/other';
 
 export default function TransactionsPage() {
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
 	const [loading, setLoading] = useState(true);
-	const { execute } = useApi();
+	const { executeWhenReady, authLoading } = useApi();
+	const { loading: authContextLoading } = useAuth();
 
 	useEffect(() => {
-		fetchTransactions();
-	}, []);
+		// Only fetch transactions when auth is ready
+		if (!authContextLoading && !authLoading) {
+			fetchTransactions();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authContextLoading, authLoading]);
 
 	const fetchTransactions = async () => {
-		const result = await execute((token) => apiClient.getTransactions(token, 50));
+		console.log('[Transactions] Fetching transactions...');
+		const result = await executeWhenReady((token) => apiClient.getTransactions(token, 50));
+		console.log('[Transactions] Fetch result:', result);
+
+		// Handle both direct array and {data: array} response formats
+		let transactionsData: Transaction[] = [];
 		if (result) {
-			setTransactions(result);
+			if (Array.isArray(result)) {
+				transactionsData = result;
+			} else if (result.data && Array.isArray(result.data)) {
+				transactionsData = result.data;
+			}
 		}
+
+		console.log('[Transactions] Setting transactions, count:', transactionsData.length);
+		setTransactions(transactionsData);
 		setLoading(false);
 	};
 
@@ -33,7 +51,8 @@ export default function TransactionsPage() {
 		return amount > 0 ? `+${amount}` : amount;
 	};
 
-	if (loading) {
+	// Show loading while auth is initializing or while fetching transactions
+	if (authContextLoading || authLoading || loading) {
 		return (
 			<div className="space-y-6">
 				<Skeleton className="h-10 w-64" />
@@ -47,7 +66,7 @@ export default function TransactionsPage() {
 	}
 
 	return (
-		<div className="space-y-6 max-w-4xl">
+		<div className="space-y-6">
 			<h1 className="text-h3 font-heading font-semibold">Transaction history</h1>
 
 			{transactions.length === 0 ? (

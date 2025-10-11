@@ -16,6 +16,7 @@ type ProfileResponse struct {
 	Skills    []string `json:"skills"`
 	Credits   int32    `json:"credits"`
 	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
 }
 
 // LeaderboardEntryResponse represents a leaderboard entry with snake_case JSON tags
@@ -24,6 +25,7 @@ type LeaderboardEntryResponse struct {
 	Name      string  `json:"name"`
 	AvatarURL *string `json:"avatar_url,omitempty"`
 	Credits   int32   `json:"credits"`
+	Rank      int     `json:"rank"`
 }
 
 // TaskResponse represents a task with snake_case JSON tags
@@ -36,17 +38,19 @@ type TaskResponse struct {
 	CreditReward int32   `json:"credit_reward"`
 	RequesterID  string  `json:"requester_id"`
 	ClaimedByID  *string `json:"claimed_by_id,omitempty"`
-	Status       *string `json:"status,omitempty"`
+	Status       string  `json:"status"`
 	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
 
 // TransactionResponse represents a transaction with snake_case JSON tags
 type TransactionResponse struct {
-	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
-	TaskID    string `json:"task_id"`
-	Credits   int32  `json:"credits"`
-	CreatedAt string `json:"created_at"`
+	ID              string  `json:"id"`
+	UserID          string  `json:"user_id"`
+	Amount          int32   `json:"amount"`
+	TransactionType string  `json:"transaction_type"`
+	Description     *string `json:"description,omitempty"`
+	CreatedAt       string  `json:"created_at"`
 }
 
 // RewardResponse represents a reward with snake_case JSON tags
@@ -72,11 +76,12 @@ func ToProfileResponse(p generated.Profile) ProfileResponse {
 		Skills:    p.Skills,
 		Credits:   p.Credits.Int32,
 		CreatedAt: formatTimestamp(p.CreatedAt),
+		UpdatedAt: formatTimestamp(p.CreatedAt), // Use created_at as updated_at since we don't track updates yet
 	}
 }
 
-// ToLeaderboardEntryResponse converts a GetLeaderboardRow to LeaderboardEntryResponse
-func ToLeaderboardEntryResponse(row generated.GetLeaderboardRow) LeaderboardEntryResponse {
+// ToLeaderboardEntryResponse converts a GetLeaderboardRow to LeaderboardEntryResponse with rank
+func ToLeaderboardEntryResponse(row generated.GetLeaderboardRow, rank int) LeaderboardEntryResponse {
 	var avatarURL *string
 	if row.AvatarUrl.Valid {
 		avatarURL = &row.AvatarUrl.String
@@ -87,6 +92,7 @@ func ToLeaderboardEntryResponse(row generated.GetLeaderboardRow) LeaderboardEntr
 		Name:      row.Name,
 		AvatarURL: avatarURL,
 		Credits:   row.Credits.Int32,
+		Rank:      rank,
 	}
 }
 
@@ -103,9 +109,10 @@ func ToTaskResponse(t generated.Task) TaskResponse {
 		claimedByID = &id
 	}
 
-	var status *string
-	if t.Status.Valid {
-		status = &t.Status.String
+	// Status should always have a value, default to "open" if not set
+	status := "open"
+	if t.Status.Valid && t.Status.String != "" {
+		status = t.Status.String
 	}
 
 	return TaskResponse{
@@ -119,17 +126,39 @@ func ToTaskResponse(t generated.Task) TaskResponse {
 		ClaimedByID:  claimedByID,
 		Status:       status,
 		CreatedAt:    formatTimestamp(t.CreatedAt),
+		UpdatedAt:    formatTimestamp(t.CreatedAt), // Use created_at as updated_at since we don't track updates yet
 	}
 }
 
 // ToTransactionResponse converts a generated Transaction to TransactionResponse
 func ToTransactionResponse(t generated.Transaction) TransactionResponse {
+	// Determine transaction type based on amount
+	transactionType := "task_reward"
+	if t.Credits < 0 {
+		transactionType = "task_posted"
+	}
+
+	// Generate description
+	var description *string
+	if t.TaskID.Valid {
+		taskIDStr := utils.UUIDToString(t.TaskID)
+		var desc string
+		if t.Credits > 0 {
+			desc = "Credits earned from completing task"
+		} else {
+			desc = "Credits spent on posting task"
+		}
+		description = &desc
+		_ = taskIDStr // Task ID available if needed for future enhancements
+	}
+
 	return TransactionResponse{
-		ID:        utils.UUIDToString(t.ID),
-		UserID:    utils.UUIDToString(t.UserID),
-		TaskID:    utils.UUIDToString(t.TaskID),
-		Credits:   t.Credits,
-		CreatedAt: formatTimestamp(t.CreatedAt),
+		ID:              utils.UUIDToString(t.ID),
+		UserID:          utils.UUIDToString(t.UserID),
+		Amount:          t.Credits,
+		TransactionType: transactionType,
+		Description:     description,
+		CreatedAt:       formatTimestamp(t.CreatedAt),
 	}
 }
 
@@ -169,7 +198,7 @@ func ToProfileResponses(profiles []generated.Profile) []ProfileResponse {
 func ToLeaderboardResponses(rows []generated.GetLeaderboardRow) []LeaderboardEntryResponse {
 	responses := make([]LeaderboardEntryResponse, len(rows))
 	for i, row := range rows {
-		responses[i] = ToLeaderboardEntryResponse(row)
+		responses[i] = ToLeaderboardEntryResponse(row, i+1)
 	}
 	return responses
 }
