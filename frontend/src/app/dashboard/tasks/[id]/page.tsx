@@ -7,7 +7,6 @@ import { useApi } from '@/hooks/use-api';
 import { apiClient } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
 	AlertDialog,
@@ -22,6 +21,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import type { Task } from '@/types/tasks';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface TaskDetailPageProps {
 	params: Promise<{ id: string }>;
@@ -41,8 +42,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
 	const fetchTask = async () => {
 		try {
-			const data = await apiClient.getTask(id);
-			setTask(data);
+			let data = await apiClient.getTask(id);
+			setTask(data.data);
 		} catch (error) {
 			toast.error('Failed to load task');
 			router.push('/dashboard/tasks');
@@ -113,34 +114,32 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 	const canDelete = task.status === 'open' && isRequester;
 
 	return (
-		<div className="max-w-4xl">
-			<Button variant="ghost" onClick={() => router.back()} className="mb-4">
-				← Back
-			</Button>
+		<div className="flex flex-col gap-lg">
+			<Link href="/dashboard/tasks" className="flex items-center gap-2xs">
+				<ArrowLeft size={20} />
+				<span>Go back</span>
+			</Link>
 
 			<Card>
 				<CardHeader>
 					<div className="flex-between mb-4">
-						<Badge className={task.status === 'open' ? 'bg-success-500' : ''}>{task.status}</Badge>
-						<span className="text-h5 font-semibold text-primary-700">
-							{task.credit_reward} credits
-						</span>
+						<p className="text-small">{task.credit_reward} credits</p>
 					</div>
-					<CardTitle className="text-h3">{task.title}</CardTitle>
-					<CardDescription className="text-base">{task.description}</CardDescription>
+					<CardTitle>{task.title}</CardTitle>
+					<CardDescription>{task.description}</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
 					<div>
 						<h3 className="text-base font-semibold mb-2">Details</h3>
 						<div className="space-y-2">
-							<div className="flex gap-2">
+							<div className="flex items-center gap-2">
 								<span className="text-neutral-500">Skill:</span>
-								<Badge variant="outline">{task.skill}</Badge>
+								<p>{task.skill}</p>
 							</div>
 							{task.urgency && (
-								<div className="flex gap-2">
+								<div className="flex items-center gap-2">
 									<span className="text-neutral-500">Urgency:</span>
-									<Badge>{task.urgency}</Badge>
+									<p>{task.urgency}</p>
 								</div>
 							)}
 							<div>
@@ -211,7 +210,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 						{canDelete && (
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
-									<Button variant="outline" disabled={actionLoading}>
+									<Button variant="destructive" disabled={actionLoading}>
 										Delete task
 									</Button>
 								</AlertDialogTrigger>
