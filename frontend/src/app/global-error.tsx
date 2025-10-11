@@ -1,6 +1,7 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
+import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 
 export default function GlobalError({
@@ -17,32 +18,9 @@ export default function GlobalError({
 	return (
 		<html>
 			<body>
-				<div
-					style={{
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'center',
-						justifyContent: 'center',
-						minHeight: '100vh',
-						padding: '20px',
-						fontFamily: 'system-ui, sans-serif',
-					}}
-				>
-					<h2 style={{ marginBottom: '20px' }}>Something went wrong!</h2>
-					<button
-						onClick={() => reset()}
-						style={{
-							padding: '10px 20px',
-							fontSize: '16px',
-							borderRadius: '5px',
-							border: '1px solid #ccc',
-							backgroundColor: '#007bff',
-							color: 'white',
-							cursor: 'pointer',
-						}}
-					>
-						Try again
-					</button>
+				<div className="flex flex-col gap-md items-center justify-center h-screen w-full">
+					<h2>Something went wrong!</h2>
+					<Button onClick={() => reset()}>Try again</Button>
 				</div>
 			</body>
 		</html>
